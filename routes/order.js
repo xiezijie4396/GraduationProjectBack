@@ -49,15 +49,11 @@ router.post('/changeStatus', function(req, res){
     var id = req.body.id;
     var status = req.body.status;
     var kind = req.body.kind
-    if(kind == 'saler'){
-        Order.update({
+    // 执行管理员才能有的操作 删除订单 / 执行只有在顾客还未确认购买情况下的 取消订单 操作
+    if(kind == 'admin'){
+        Order.remove({
             _id: id
-        }, {
-            $set: {
-                status: status,
-                
-            }
-        }, function(err, data){
+        }).then(function(err, result){
             if(err){
                 resultMsg = {
                     status: -1,
@@ -68,10 +64,11 @@ router.post('/changeStatus', function(req, res){
             }
             resultMsg = {
                 status: 1,
-                msg: '数据更改成功'
+                msg: '数据删除成功'
             }
             res.send(resultMsg)
-        })      
+            return;
+        })
     }
     Order.update({
         _id: id
@@ -88,22 +85,68 @@ router.post('/changeStatus', function(req, res){
             res.send(resultMsg)
             return;
         }
-        resultMsg = {
-            status: 1,
-            msg: '数据更改成功'
+        // 顾客更改状态 店家、管理员自动将该订单置为"未读"状态
+        if(kind == 'buyer'){
+            Order.update({
+                _id: id
+            }, {
+                $set: {
+                    salerRead: false,
+                    adminRead: false,
+                }
+            }, function(err, data){
+                if(err){
+                    resultMsg = {
+                        status: -1,
+                        msg: '数据库查询错误'
+                    }
+                    res.send(resultMsg)
+                    return;
+                }
+                resultMsg = {
+                    status: 1,
+                    msg: '数据更改成功'
+                }
+                res.send(resultMsg)
+            })
         }
-        res.send(resultMsg)
-    })      
+        // 店家更改状态 顾客、管理员自动将该订单置为"未读"状态
+        else if(kind == 'saler'){
+            Order.update({
+                _id: id
+            }, {
+                $set: {
+                    buyerRead: false,
+                    adminRead: false,
+                }
+            }, function(err, data){
+                if(err){
+                    resultMsg = {
+                        status: -1,
+                        msg: '数据库查询错误'
+                    }
+                    res.send(resultMsg)
+                    return;
+                }
+                resultMsg = {
+                    status: 1,
+                    msg: '数据更改成功'
+                }
+                res.send(resultMsg)
+            })
+        }
+    })
+    
 });
 
-router.post('/changeObj', function(req, res){
+router.post('/changeNum', function(req, res){
     var id = req.body.id;
-    var goods = JSON.parse(req.body.goods);
+    var order = JSON.parse(req.body.order);
     Order.update({
         _id: id
     }, {
         $set: {
-            goods: goods
+            wantNum: order.wantNum
         }
     }, function(err, data){
         if(err){
@@ -119,7 +162,7 @@ router.post('/changeObj', function(req, res){
             msg: '数据更改成功'
         }
         res.send(resultMsg)
-    })      
+    })     
 });
 
 router.post('/changeRead', function(req, res){
