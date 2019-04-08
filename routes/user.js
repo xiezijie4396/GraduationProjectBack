@@ -237,6 +237,7 @@ router.post('/register/setdetail', function(req, res){
     var address = req.body.address
     var profile = req.body.profile
     var headImg = JSON.parse(req.body.headImg)
+    
     User.find({                         // 先查看用户名有没有重复
         username: username,             // 用户名相同
         _id: {$ne:id}                   // id不同
