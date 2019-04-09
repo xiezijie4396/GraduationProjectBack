@@ -7,8 +7,8 @@ var orderSchema = mongoose.Schema({
   },
   name: String,
   num: Number,
+  totalNum: Number,
   price: Number,
-  wantNum: Number,
   createTime: {
     type: Date,
     default: Date.now
@@ -32,7 +32,8 @@ var orderSchema = mongoose.Schema({
     default: false
   },
   address: String,
-  phone: String
+  phone: String,
+  goodsId: String
 });
 
 

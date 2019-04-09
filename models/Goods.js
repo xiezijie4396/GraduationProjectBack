@@ -22,7 +22,6 @@ var goodsSchema = mongoose.Schema({
   price: {
     type: Number,
   },
-  
   createTime: {
     type: Date,
     default: Date.now
@@ -40,15 +39,11 @@ var goodsSchema = mongoose.Schema({
   num: {                                             // 总数量
     type: Number,
   },
-  wantNum: {                                         // 欲购买的数量
-    type: Number,
-    default: 0
-  },
   comments: {                                        // 评论数量
     type: Number,
     default: 0
   },  
-  volume: {                                          // 销量
+  originalNum: {                                     // 原始数量
     type: Number, 
     default: 0
   }

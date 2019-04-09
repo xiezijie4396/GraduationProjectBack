@@ -49,6 +49,7 @@ router.post('/add',function(req, res){
     var packList = JSON.parse(req.body.packList)
     var saler = req.body.saler
     var salerId = req.body.salerId
+    var originalNum = req.body.num
         
     Goods.create({
         params: params,
@@ -61,7 +62,8 @@ router.post('/add',function(req, res){
         num: num,
         packList: packList,
         saler: saler,
-        salerId: salerId
+        salerId: salerId,
+        originalNum: originalNum
     },function(err, data){
         if(err){
             resultMsg = {

@@ -16,35 +16,46 @@ router.post('/create', function(req, res){
             name: e.name,
             num: e.num,
             price: e.price,
-            wantNum: e.wantNum,
             buyerName: e.buyerName,
             salerName: e.salerName,
             address: e.address,
-            phone: e.phone
-        }, function(err, data){
+            phone: e.phone,
+            goodsId: e.goodsId,
+            totalNum: e.totalNum
+        }).then(result => {
+            // 根据订单中商品的数量对库存进行修改
             Goods.update({
-                _id: e.goodsId
-            }, {
-                $set: {
-                    num: e.num - e.wantNum
-                }
-            },function(err, result){
-                console.log(result)
-            })
+                name: e.name
+            },{
+                $inc:{num: -e.num}     // num 相比原来减少订单中商品的数量
+            }).then(result1 => {})
         })
     });
     res.send('订单添加成功')
 });
 
+// 获取所有订单
 router.post('/get', function(req, res){
-    Order.find({}, function(err, data){
-        if(err){
-            console.log(err)
-        }
-        res.send(data)
+    Goods.find({}).then(result => {
+        result.forEach(e => {
+            // 更新可选择的最大数量
+            Order.update({
+                goodsId: e._id
+            }, {
+                $set: {
+                    totalNum: e.num
+                }
+            },{multi:true}).then(result => {})
+        })
+        setTimeout(function(){
+            Order.find({}).then(result3 => {
+                res.send(result3)
+            })
+        }, 0)
     })
 });
 
+// 更改订单状态
 router.post('/changeStatus', function(req, res){
     var id = req.body.id;
     var status = req.body.status;
@@ -139,32 +150,30 @@ router.post('/changeStatus', function(req, res){
     
 });
 
+// 更改订单商品数量
 router.post('/changeNum', function(req, res){
     var id = req.body.id;
     var order = JSON.parse(req.body.order);
-    Order.update({
+    Order.find({
         _id: id
-    }, {
-        $set: {
-            wantNum: order.wantNum
-        }
-    }, function(err, data){
-        if(err){
-            resultMsg = {
-                status: -1,
-                msg: '数据库查询错误'
-            }
-            res.send(resultMsg)
-            return;
-        }
-        resultMsg = {
-            status: 1,
-            msg: '数据更改成功'
-        }
-        res.send(resultMsg)
-    })     
+    }).then(result1 => {
+        Goods.update({
+            _id: result1[0].goodsId
+        },{
+            $inc:{num: result1[0].num - order.num}       // 原来的仓库量 - 现在的需要量 = 现在的仓库量
+        }).then(result2 => {
+            Order.update({
+                _id: id
+            },{
+                $set: {num: order.num}
+            }).then(result3 => {
+                res.send('订单修改成功')
+            })
+        })   
+    })
 });
 
+// 更改订单阅读状态
 router.post('/changeRead', function(req, res){
     var id = req.body.id;
     var type = req.body.type;
@@ -255,12 +264,6 @@ router.post('/changeRead', function(req, res){
             })
         }
     })      
-});
-
-router.post('/buy', function(req, res){
-    var id = req.body.id;
-    var wantNum = req.body.wantNum;
-
 });
 
 
